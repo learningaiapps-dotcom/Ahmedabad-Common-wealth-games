@@ -5,6 +5,7 @@ import { FORMS } from './forms.js'
 import Form from './Form.jsx'
 import Admin from './Admin.jsx'
 import Weather from './Weather.jsx'
+import Events from './Events.jsx'
 import LeafletMap, { LAYERS } from './LeafletMap.jsx'
 import { supabase } from './supabase.js'
 
@@ -75,15 +76,19 @@ export default function App() {
   const go = (v) => { setView(v); window.scrollTo(0, 0) }
   const changeLang = (l) => { setLang(l); try { localStorage.setItem('gc_lang', l) } catch {} }
   const locate = () => navigator.geolocation?.getCurrentPosition((p) => setMe([p.coords.latitude, p.coords.longitude]))
+  const TC = { near: 1, ev: 2, see: 3, how: 4, map: 5, hl: 6, park: 7, vol: 8, fv: 9, hz: 10, wx: 11 }
   const Tile = ({ icon, k, to, wide }) => (
-    <div className={'tile' + (wide ? ' wide' : '')} role="button" tabIndex="0" onClick={() => go(to)}><span>{icon}</span>{t(k)}</div>
+    <div className={'tile c' + TC[to] + (wide ? ' wide' : '')} role="button" tabIndex="0" onClick={() => go(to)}>
+      <span className="ti">{icon}</span>
+      <b>{t(k)}</b>
+    </div>
   )
 
   let body
   if (view === 'home') {
     body = (
       <>
-        <p className="mu">{t('sub')}</p>
+        <div className="hero"><div className="hs">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</div><h2>{t('t')}</h2><p>{t('sub')}</p></div>
         <div className="notice">{t('notice')}</div>
         <div className="tiles">
           <Tile icon="📍" k="near" to="near" /><Tile icon="🎟️" k="ev" to="ev" />
@@ -119,21 +124,7 @@ export default function App() {
       </>
     )
   } else if (view === 'ev') {
-    body = (
-      <>
-        <h2>{t('ev')}</h2>
-        <p className="mu">{t('sample')}</p>
-        {E.map((e) => (
-          <div className="card" key={e[0]}>
-            <h3>{e[1]} {e[0]}</h3>
-            <div className="mu">{e[3]} · {V[e[2]][0]}</div>
-            <b>{t('day')}</b>
-            {e[4].map((r) => <div className="tl" key={r[0]}><b>{r[0]}</b><span>{r[1]}</span></div>)}
-            <Btn href={gm(V[e[2]][1], V[e[2]][2])}>{t('dir')}</Btn>
-          </div>
-        ))}
-      </>
-    )
+    body = (<><h2>{t('ev')}</h2><Events t={t} /></>)
   } else if (view === 'see') {
     body = (
       <>
@@ -240,7 +231,7 @@ export default function App() {
   return (
     <div className={big ? 'big' : ''}>
       <header>
-        <h1>{t('t')}</h1>
+        <h1>🏟️ {t('t')}</h1>
         <select value={lang} onChange={(e) => changeLang(e.target.value)} aria-label="Language">
           <option value="en">English</option><option value="hi">हिन्दी</option><option value="gu">ગુજરાતી</option>
         </select>
@@ -250,8 +241,15 @@ export default function App() {
         {view !== 'home' && <button className="back" onClick={() => go('home')}>{t('back')}</button>}
         {body}
         <p className="demo">{t('demo')}</p>
-        {view === 'home' && <p className="demo"><a href="#admin" onClick={(e) => { e.preventDefault(); go('admin') }}>{t('adminpage')}</a></p>}
+        {view === 'home' && <p className="demo noprint"><a href="#admin" onClick={(e) => { e.preventDefault(); go('admin') }}>{t('adminpage')}</a></p>}
       </main>
+      <nav className="bn">
+        {[['home', '🏠', 'back'], ['map', '🗺️', 'map'], ['ev', '🎟️', 'ev'], ['wx', '🌤️', 'wx'], ['hl', '📞', 'hl']].map(([v, ic, k]) => (
+          <button key={v} className={view === v ? 'on' : ''} onClick={() => go(v)}>
+            <span>{ic}</span>{v === 'home' ? 'Home' : t(k)}
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
